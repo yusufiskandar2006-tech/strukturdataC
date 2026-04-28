@@ -1,9 +1,12 @@
+import streamlit as st
 import random
 import time
+import pandas as pd
 
-# ======================
-# SORTING
-# ======================
+st.set_page_config(page_title="Grafik Sorting", layout="centered")
+
+st.title("📈 Grafik Perbandingan Algoritma Sorting")
+
 
 def selection_sort(arr):
     data = arr.copy()
@@ -51,51 +54,56 @@ def merge(left, right):
     result.extend(right[j:])
     return result
 
-
-# ======================
-# BENCHMARK
-# ======================
-
 sizes = [100, 1000, 10000, 50000]
 repeat = 3
 
-# Header tabel
-print("\n=== TABEL BENCHMARKING ===")
-print("-" * 95)
-print(f"{'Ukuran':<8} | {'Algoritma':<15} | {'Run 1':<10} | {'Run 2':<10} | {'Run 3':<10} | {'Avg':<10}")
-print("-" * 95)
+results = []
+progress = st.progress(0)
+
+total_steps = len(sizes) * 3  # 3 algoritma
+step = 0
 
 for size in sizes:
     data = random.sample(range(size * 10), size)
 
-    # ===== Selection Sort =====
     times = []
     for _ in range(repeat):
         start = time.perf_counter()
         selection_sort(data)
         times.append(time.perf_counter() - start)
-    avg = sum(times) / repeat
+    selection_avg = sum(times) / repeat
 
-    print(f"{size:<8} | {'Selection Sort':<15} | {times[0]:<10.6f} | {times[1]:<10.6f} | {times[2]:<10.6f} | {avg:<10.6f}")
+    step += 1
+    progress.progress(step / total_steps)
 
-    # ===== Insertion Sort =====
     times = []
     for _ in range(repeat):
         start = time.perf_counter()
         insertion_sort(data)
         times.append(time.perf_counter() - start)
-    avg = sum(times) / repeat
+    insertion_avg = sum(times) / repeat
 
-    print(f"{'':<8} | {'Insertion Sort':<15} | {times[0]:<10.6f} | {times[1]:<10.6f} | {times[2]:<10.6f} | {avg:<10.6f}")
-
-    # ===== Merge Sort =====
+    step += 1
+    progress.progress(step / total_steps)
+    
     times = []
     for _ in range(repeat):
         start = time.perf_counter()
         merge_sort(data)
         times.append(time.perf_counter() - start)
-    avg = sum(times) / repeat
+    merge_avg = sum(times) / repeat
 
-    print(f"{'':<8} | {'Merge Sort':<15} | {times[0]:<10.6f} | {times[1]:<10.6f} | {times[2]:<10.6f} | {avg:<10.6f}")
+    step += 1
+    progress.progress(step / total_steps)
 
-    print("-" * 95)
+    results.append({
+        "Ukuran Data": size,
+        "Selection Sort": selection_avg,
+        "Insertion Sort": insertion_avg,
+        "Merge Sort": merge_avg
+    })
+
+df = pd.DataFrame(results)
+
+st.subheader("📊 Grafik Perbandingan Waktu Eksekusi")
+st.line_chart(df.set_index("Ukuran Data"))
